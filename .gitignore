@@ -1,3 +1,5 @@
 *.out
 .jekyll-cache/
 _site/
+sources/forth_modoki/01_int_parser/int_parser
+.vscode/
