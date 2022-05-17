@@ -41,6 +41,20 @@ int parse_one(int prev_ch, struct Token *out_token) {
         return prev_ch;
     }
 
+    if (prev_ch == '{') {
+        out_token->ltype = OPEN_CURLY;
+        out_token->u.onechar = '{';
+        prev_ch = cl_getc();
+        return prev_ch;
+    }
+
+    if (prev_ch == '}') {
+        out_token->ltype = CLOSE_CURLY;
+        out_token->u.onechar = '}';
+        prev_ch = cl_getc();
+        return prev_ch;
+    }
+
     if (isdigit(prev_ch)) {
         out_token->ltype = NUMBER;
         int number = prev_ch - '0';
@@ -209,11 +223,31 @@ static void test_parse_one_literal_name() {
     assert(strcmp(token.u.name, expect_name) == 0);
 }
 
+static void test_parse_braces() {
+    enum LexicalType expect_type;
+    struct Token token = {UNKNOWN, {0}};
+    int ch = EOF;
+
+    char *input = "{}";
+    cl_getc_set_src(input);
+
+    expect_type = OPEN_CURLY;
+    ch = parse_one(ch, &token);
+    assert(ch == '}');
+    assert(token.ltype == expect_type);
+
+    expect_type = CLOSE_CURLY;
+    ch = parse_one(ch, &token);
+    assert(ch == EOF);
+    assert(token.ltype == expect_type);
+}
+
 static void unit_tests() {
     test_parse_one_empty_should_return_END_OF_FILE();
     test_parse_one_number();
     test_parse_one_executable_name();
     test_parse_one_literal_name();
+    test_parse_braces();
 }
 
 int main() {
