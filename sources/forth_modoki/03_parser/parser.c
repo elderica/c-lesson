@@ -163,45 +163,45 @@ void parser_print_all() {
 
 static void test_parse_one_number() {
     char *input = "123";
+    enum LexicalType expect_type = NUMBER;
     int expect = 123;
 
     struct Token token = {UNKNOWN, {0}};
-    int ch;
+    int ch = EOF;
 
     cl_getc_set_src(input);
 
-    ch = parse_one(EOF, &token);
-
+    ch = parse_one(ch, &token);
     assert(ch == EOF);
-    assert(token.ltype == NUMBER);
+    assert(token.ltype == expect_type);
     assert(expect == token.u.number);
 }
 
 static void test_parse_one_empty_should_return_END_OF_FILE() {
     char *input = "";
-    int expect = END_OF_FILE;
+    enum LexicalType expect_type = END_OF_FILE;
 
     struct Token token = {UNKNOWN, {0}};
     int ch;
 
     cl_getc_set_src(input);
-    ch = parse_one(EOF, &token);
 
+    ch = parse_one(EOF, &token);
     assert(ch == EOF);
-    assert(token.ltype == expect);
+    assert(token.ltype == expect_type);
 }
 
 static void test_parse_one_executable_name() {
     char *input = "add";
+    enum LexicalType expect_type = EXECUTABLE_NAME;
     char *expect_name = "add";
-    int expect_type = EXECUTABLE_NAME;
 
     struct Token token = {UNKNOWN, {0}};
     int ch;
 
     cl_getc_set_src(input);
-    ch = parse_one(EOF, &token);
 
+    ch = parse_one(EOF, &token);
     assert(ch == EOF);
     assert(token.ltype == expect_type);
     assert(strcmp(token.u.name, expect_name) == 0);
@@ -209,29 +209,29 @@ static void test_parse_one_executable_name() {
 
 static void test_parse_one_literal_name() {
     char *input = "/add";
+    enum LexicalType expect_type = LITERAL_NAME;
     char *expect_name = "add";
-    int expect_type = LITERAL_NAME;
 
     struct Token token = {UNKNOWN, {0}};
     int ch;
 
     cl_getc_set_src(input);
-    ch = parse_one(EOF, &token);
 
+    ch = parse_one(EOF, &token);
     assert(ch == EOF);
     assert(token.ltype == expect_type);
     assert(strcmp(token.u.name, expect_name) == 0);
 }
 
 static void test_parse_braces() {
-    enum LexicalType expect_type;
+    char *input = "{}";
+    enum LexicalType expect_type = OPEN_CURLY;
+
     struct Token token = {UNKNOWN, {0}};
     int ch = EOF;
 
-    char *input = "{}";
     cl_getc_set_src(input);
 
-    expect_type = OPEN_CURLY;
     ch = parse_one(ch, &token);
     assert(ch == '}');
     assert(token.ltype == expect_type);
