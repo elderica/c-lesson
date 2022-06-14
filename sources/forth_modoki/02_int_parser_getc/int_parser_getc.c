@@ -1,28 +1,110 @@
-#include "clesson.h"
 #include <assert.h>
+#include <ctype.h>
+#include <string.h>
+
+#include "clesson.h"
 
 /*
 cc cl_getc.c int_parser_getc.c
 */
 
-int main() {
-    int answer1 = 0;
-    int answer2 = 0;
+int parse_one(int last_char, int *out_value, token_type_t *out_type);
 
-    // write something here.
+void test_parse_one_123(void);
+void test_parse_one_123_456(void);
 
-    // sample for cl_getc() usage.
-    int c;
+int parse_one(int c, int *out_value, token_type_t *out_type) {
+  assert(out_value != NULL);
+  assert(out_type != NULL);
 
-    while((c = cl_getc()) != EOF) {
-        printf("%c\n",c );
+  if (c == '\0') {
+    c = cl_getc();
+  }
+
+  if (isspace(c)) {
+    *out_type = TOKEN_TYPE_SPACE;
+    *out_value = 0;
+    while (1) {
+      c = cl_getc();
+      if (!isspace(c)) {
+        return c;
+      }
     }
+  }
 
-    // verity result.
-    assert(answer1 == 123);
-    assert(answer2 == 456);
+  if (isdigit(c)) {
+    *out_type = TOKEN_TYPE_NUMBER;
+    *out_value = c - '0';
+    while (1) {
+      c = cl_getc();
+      if (isdigit(c)) {
+        *out_value = (*out_value) * 10 + (c - '0');
+      } else {
+        return c;
+      }
+    }
+  }
 
-    return 0;
+  // EOF
 
+  return '\0';
+}
 
+void test_parse_one_123(void) {
+  cl_getc_set_src("123 456");
+
+  int value;
+  token_type_t type;
+  int c = parse_one('\0', &value, &type);
+
+  assert(type == TOKEN_TYPE_NUMBER);
+  assert(value == 123);
+}
+
+void test_parse_one_123_456(void) {
+  cl_getc_set_src("123 456");
+
+  int answer = 0;
+  int c = '\0';
+  token_type_t token_type;
+
+  c = parse_one(c, &answer, &token_type);
+  assert(answer == 123);
+  assert(token_type == TOKEN_TYPE_NUMBER);
+
+  c = parse_one(c, &answer, &token_type);
+  assert(answer == 0);
+  assert(token_type == TOKEN_TYPE_SPACE);
+
+  c = parse_one(c, &answer, &token_type);
+  assert(answer == 456);
+  assert(token_type == TOKEN_TYPE_NUMBER);
+}
+
+void test_parse_one_123__456(void) {
+  cl_getc_set_src("123  456  ");
+
+  int answer = 0;
+  int c = '\0';
+  token_type_t token_type;
+
+  c = parse_one(c, &answer, &token_type);
+  assert(answer == 123);
+  assert(token_type == TOKEN_TYPE_NUMBER);
+
+  c = parse_one(c, &answer, &token_type);
+  assert(answer == 0);
+  assert(token_type == TOKEN_TYPE_SPACE);
+
+  c = parse_one(c, &answer, &token_type);
+  assert(answer == 456);
+  assert(token_type == TOKEN_TYPE_NUMBER);
+}
+
+int main() {
+  test_parse_one_123();
+  test_parse_one_123_456();
+  test_parse_one_123__456();
+
+  return 0;
 }
